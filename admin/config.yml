@@ -23,9 +23,11 @@ collections:
         format: json
         fields:
           - name: "products"
-            label: "产品列表"
+            label: "产品"
+            label_singular: "产品"
             widget: "list"
-            summary: "{{fields.zh.name}} / {{fields.en.name}}"
+            summary: "{{fields.zh.name}}"
+            hint: "点本区下方的「Add 产品」按钮新增一条；每条右侧的垃圾桶图标可删除；左侧手柄可拖动排序。改完点右上角「Publish / Save」即上线。"
             fields:
               - name: "cat"
                 label: "分类"
@@ -40,7 +42,7 @@ collections:
                 label: "产品图片"
                 widget: "image"
                 required: false
-                hint: "建议 800×800 以上，自动随站点部署。"
+                hint: "建议 800×800 以上，上传后随站点自动部署。"
               - name: "zh"
                 label: "中文信息"
                 widget: "object"
