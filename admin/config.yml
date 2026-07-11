@@ -1,0 +1,64 @@
+backend:
+  name: git-gateway
+  branch: main
+
+# Decap connects to your Git repo via Netlify Identity + Git Gateway.
+# After deploying to Netlify: Site settings -> Identity -> Enable,
+# then Identity -> Services -> Git Gateway -> Enable.
+
+media_folder: "assets/img/products"
+public_folder: "/assets/img/products"
+
+locale: "zh"
+site_title: "仙人森林 · 内容管理"
+publish_mode: "simple"
+
+collections:
+  - name: "products"
+    label: "产品管理"
+    files:
+      - name: "product-data"
+        label: "全部产品"
+        file: "products.json"
+        format: json
+        fields:
+          - name: "products"
+            label: "产品列表"
+            widget: "list"
+            summary: "{{fields.zh.name}} / {{fields.en.name}}"
+            fields:
+              - name: "cat"
+                label: "分类"
+                widget: "select"
+                options:
+                  - { label: "文具纸张", value: "stationery" }
+                  - { label: "办公设备", value: "device" }
+                  - { label: "家具收纳", value: "furniture" }
+                  - { label: "数字办公", value: "digital" }
+                  - { label: "清洁耗材", value: "consumable" }
+              - name: "img"
+                label: "产品图片"
+                widget: "image"
+                required: false
+                hint: "建议 800×800 以上，自动随站点部署。"
+              - name: "zh"
+                label: "中文信息"
+                widget: "object"
+                fields:
+                  - { name: "name", label: "名称", widget: "string" }
+                  - { name: "desc", label: "描述", widget: "text" }
+                  - { name: "price", label: "价格", widget: "string", hint: "如 ¥ 3.9 / 支" }
+              - name: "en"
+                label: "English"
+                widget: "object"
+                fields:
+                  - { name: "name", label: "Name", widget: "string" }
+                  - { name: "desc", label: "Description", widget: "text" }
+                  - { name: "price", label: "Price", widget: "string", hint: "e.g. from $0.12 / pc" }
+              - name: "spec"
+                label: "出口规格 (Export)"
+                widget: "object"
+                fields:
+                  - { name: "moq", label: "MOQ", widget: "string", hint: "如 5,000 pcs" }
+                  - { name: "lead", label: "交期 Lead time", widget: "string", hint: "如 7–15 days" }
+                  - { name: "term", label: "贸易术语 Trade term", widget: "string", hint: "如 FOB Shanghai" }
