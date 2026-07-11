@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>产品管理后台 · 仙人森林 Immortal Forest</title>
+  <meta name="description" content="仙人森林产品可视化上传后台：填写中英信息、上传图片，导出即可上线。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 36px; align-items: start; }
+    .admin-panel { padding: 28px; }
+    .admin-panel h2 { font-size: 1.4rem; margin-bottom: 20px; }
+    .sep { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+    .admin-submit { width: 100%; justify-content: center; margin-top: 8px; }
+    .admin-list { display: flex; flex-direction: column; gap: 12px; max-height: 520px; overflow: auto; padding-right: 6px; }
+    .admin-card { display: flex; gap: 14px; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+    .admin-card .ic { width: 56px; height: 56px; border-radius: 10px; flex: none; object-fit: cover; background: var(--bg-2); border: 1px solid var(--border); display: grid; place-items: center; color: var(--emerald); }
+    .admin-card .ic svg { width: 30px; height: 30px; }
+    .admin-card .meta { flex: 1; min-width: 0; }
+    .admin-card .meta b { display: block; font-size: 1rem; }
+    .admin-card .meta span { font-size: .82rem; color: var(--text-dim); }
+    .admin-card .del { flex: none; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text-soft); display: grid; place-items: center; font-size: 1rem; }
+    .admin-card .del:hover { color: #ff6b6b; border-color: #ff6b6b; }
+    .admin-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .admin-actions .btn { padding: 11px 16px; font-size: .88rem; cursor: pointer; }
+    .admin-hint { margin-top: 16px; font-size: .82rem; color: var(--text-dim); line-height: 1.6; }
+    .admin-preview { margin-top: 10px; max-height: 140px; border-radius: 10px; border: 1px solid var(--border); }
+    .admin-back { font-size: .9rem; color: var(--text-soft); }
+    .admin-back:hover { color: var(--emerald); }
+    @media (max-width: 860px) { .admin-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-page="admin">
+
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M12 12c0-4 3-7 7-7 0 4-3 7-7 7Z"/><path d="M12 14c0-3-2.5-5.5-6-5.5 0 3 2.5 5.5 6 5.5Z"/></svg></span>
+        <span>仙人森林<small>Product Admin</small></span>
+      </a>
+      <div class="nav-actions">
+        <a href="index.html" class="lang-switch" data-magnetic>官网</a>
+        <button class="theme-toggle" aria-label="切换主题">
+          <svg class="ico sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="ico moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+          <span class="knob"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container section" style="padding-top: clamp(60px,9vw,110px);">
+    <span class="eyebrow reveal">产品管理后台</span>
+    <h1 class="section-title reveal" data-delay="1" style="font-size:clamp(2.2rem,5.5vw,3.4rem);">可视化上传产品资料</h1>
+    <p class="section-sub reveal" data-delay="2">填写中英信息、上传图片，点「添加产品」即可。完成后<b>导出 products-data.js</b>覆盖到站点，或点「复制 JSON」发我帮你上线。草稿会自动保存在本浏览器。</p>
+
+    <div class="admin-grid">
+      <!-- 表单 -->
+      <section class="glass admin-panel reveal">
+        <h2>添加 / 编辑产品</h2>
+        <form id="product-form">
+          <div class="form-field">
+            <label>分类</label>
+            <select id="cat">
+              <option value="stationery">文具纸张 Stationery</option>
+              <option value="device">办公设备 Devices</option>
+              <option value="furniture">家具收纳 Furniture</option>
+              <option value="digital">数字办公 Digital Office</option>
+              <option value="consumable">清洁耗材 Cleaning</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label>中文名称 *</label>
+            <input id="zh-name" required placeholder="如：森呼吸中性笔" />
+          </div>
+          <div class="form-field">
+            <label>中文描述</label>
+            <textarea id="zh-desc" placeholder="一句话卖点，如：竹纤笔身、速干墨芯。"></textarea>
+          </div>
+          <div class="form-field">
+            <label>中文价格</label>
+            <input id="zh-price" placeholder="如：¥ 3.9 / 支" />
+          </div>
+
+          <hr class="sep" />
+
+          <div class="form-field">
+            <label>English Name *</label>
+            <input id="en-name" required placeholder="e.g. Forest-Breath Gel Pen" />
+          </div>
+          <div class="form-field">
+            <label>English Description</label>
+            <textarea id="en-desc" placeholder="One-line selling point"></textarea>
+          </div>
+          <div class="form-field">
+            <label>English Price</label>
+            <input id="en-price" placeholder="e.g. from $0.12 / pc" />
+          </div>
+
+          <hr class="sep" />
+
+          <div class="grid-2">
+            <div class="form-field"><label>MOQ</label><input id="moq" placeholder="5,000 pcs" /></div>
+            <div class="form-field"><label>Lead Time</label><input id="lead" placeholder="7–15 days" /></div>
+          </div>
+          <div class="form-field">
+            <label>Trade Term</label>
+            <input id="term" placeholder="FOB Shanghai / CIF / EXW" />
+          </div>
+
+          <hr class="sep" />
+
+          <div class="form-field">
+            <label>产品图片</label>
+            <input id="img" type="file" accept="image/*" />
+            <img id="img-preview" class="admin-preview" alt="" hidden />
+          </div>
+
+          <button type="submit" class="btn btn-primary admin-submit">＋ 添加产品</button>
+        </form>
+      </section>
+
+      <!-- 列表 + 操作 -->
+      <section class="glass admin-panel reveal" data-delay="1">
+        <div class="admin-list-head" style="display:flex;justify-content:space-between;align-items:baseline;">
+          <h2>已添加产品 (<span id="count">0</span>)</h2>
+        </div>
+        <div id="product-list" class="admin-list"></div>
+
+        <div class="admin-actions">
+          <button id="export-btn" class="btn btn-primary">导出 products-data.js</button>
+          <button id="copy-btn" class="btn btn-ghost">复制 JSON</button>
+          <label class="btn btn-ghost" for="import-file" style="cursor:pointer;">导入 JSON</label>
+          <input id="import-file" type="file" accept=".json,application/json" hidden />
+          <button id="preview-zh" class="btn btn-ghost">预览中文</button>
+          <button id="preview-en" class="btn btn-ghost">预览英文</button>
+          <button id="clear-btn" class="btn btn-ghost">清空</button>
+        </div>
+        <p id="hint" class="admin-hint">提示：导出文件会内联图片，建议单图控制在 200KB 内，保证加载速度。导出的 products-data.js 覆盖到 assets/js/ 后重新部署即可上线。</p>
+      </section>
+    </div>
+  </main>
+
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>
