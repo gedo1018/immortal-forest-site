@@ -12,6 +12,16 @@
 </head>
 <body data-page="home">
 
+  <!-- Forward Netlify Identity invite/confirmation tokens from site root to /admin/ -->
+  <script>
+    (function () {
+      var h = window.location.hash || "";
+      if (/invite_token|confirmation_token|recovery_token/.test(h)) {
+        window.location.replace("/admin/" + h);
+      }
+    })();
+  </script>
+
   <!-- NAV -->
   <header class="nav">
     <div class="container nav-inner">
