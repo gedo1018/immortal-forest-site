@@ -65,7 +65,14 @@
     // placeholder shows through — so a broken/external URL never shows a broken icon.
     const ph = '<span class="thumb-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[p.cat] || ICONS.stationery) + "</svg></span>";
     if (p.img) {
-      return ph + '<img class="thumb-img" src="' + esc(p.img) + '" alt="' + esc((p[lang] || p.zh).name) + '" loading="lazy" decoding="async">';
+      let src = p.img;
+      // Repo-relative image paths (images/...) must be resolved against the site
+      // origin, otherwise they break on sub-directory pages like /en/products.html
+      // (where a relative path would resolve to /en/images/... and 404).
+      if (src.indexOf("://") === -1 && src.startsWith("images/")) {
+        src = location.origin + "/" + src;
+      }
+      return ph + '<img class="thumb-img" src="' + esc(src) + '" alt="' + esc((p[lang] || p.zh).name) + '" loading="lazy" decoding="async">';
     }
     return ph;
   }

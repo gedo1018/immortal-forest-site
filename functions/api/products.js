@@ -160,7 +160,11 @@ export async function onRequestGet(context) {
       range = sheetId + "!A1:Z1000";
     }
     const values = await readRange(token, sheetToken, range);
-    const products = buildProducts(values, SITE_URL || "");
+    // Prefer an explicit SITE_URL env var; otherwise derive the origin from the
+    // incoming request so repo-relative image paths (images/...) are turned into
+    // absolute URLs that work from any page (incl. /en/products.html).
+    const base = SITE_URL || (context.request && context.request.url ? new URL(context.request.url).origin : "");
+    const products = buildProducts(values, base);
     if (!products.length) return fallback(context, isDebug);
     if (isDebug) {
       return new Response(JSON.stringify({
