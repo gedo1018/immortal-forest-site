@@ -47,6 +47,19 @@ async function getToken(appId, appSecret) {
   return j.tenant_access_token;
 }
 
+// Discover the first sheet's id so we don't require the user to paste a
+// brittle "sheetId!A1:Z1000" range by hand.
+async function getFirstSheetId(token, spreadsheetToken) {
+  const url = API_BASE + "/open-apis/sheets/v3/spreadsheets/" +
+              spreadsheetToken + "/sheets/query";
+  const r = await fetch(url, { headers: { Authorization: "Bearer " + token } });
+  const j = await r.json();
+  if (j.code !== 0) throw new Error("Feishu sheets query error: " + JSON.stringify(j));
+  const sheets = (j.data && j.data.sheets) || [];
+  if (!sheets.length) throw new Error("No sheets found in spreadsheet");
+  return sheets[0].sheet_id;
+}
+
 async function readRange(token, spreadsheetToken, range) {
   const url = API_BASE + "/open-apis/sheets/v2/spreadsheets/" +
               spreadsheetToken + "/values/" + encodeURIComponent(range);
@@ -93,7 +106,13 @@ function buildProducts(values, siteUrl) {
 }
 
 // Serve the committed /products.json when Feishu is unavailable.
-async function fallback(context) {
+async function fallback(context, debug) {
+  if (debug) {
+    return new Response(JSON.stringify({
+      source: "fallback",
+      reason: "Feishu env vars missing or read failed — serving bundled /products.json",
+    }), { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+  }
   try {
     const url = new URL("/products.json", context.request.url);
     const r = await context.env.ASSETS.fetch(new Request(url));
@@ -101,39 +120,66 @@ async function fallback(context) {
       return new Response(r.body, {
         headers: { "Content-Type": "application/json",
                    "Cache-Control": "public, max-age=3600",
-                   "Access-Control-Allow-Origin": "*" },
+                   "Access-Control-Allow-Origin": "*",
+                   "X-Data-Source": "fallback" },
       });
     }
   } catch (e) { /* ASSETS binding unavailable -> empty */ }
   return new Response(JSON.stringify({ products: [] }), {
-    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*",
+               "X-Data-Source": "fallback" },
   });
 }
 
 export async function onRequestGet(context) {
   const { FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_SPREADSHEET_TOKEN,
-          FEISHU_SHEET_RANGE, SITE_URL } = context.env;
+          FEISHU_SHEET_TOKEN, FEISHU_SHEET_RANGE, SITE_URL } = context.env;
+
+  // Accept either spelling the user may have used.
+  const sheetToken = FEISHU_SPREADSHEET_TOKEN || FEISHU_SHEET_TOKEN;
+  const isDebug = new URL(context.request.url).searchParams.has("debug");
 
   // Not configured yet -> use the static bundled data.
-  if (!FEISHU_APP_ID || !FEISHU_APP_SECRET || !FEISHU_SPREADSHEET_TOKEN || !FEISHU_SHEET_RANGE) {
-    return fallback(context);
+  if (!FEISHU_APP_ID || !FEISHU_APP_SECRET || !sheetToken) {
+    return fallback(context, isDebug);
   }
 
   try {
     const token = await getToken(FEISHU_APP_ID, FEISHU_APP_SECRET);
-    const values = await readRange(token, FEISHU_SPREADSHEET_TOKEN, FEISHU_SHEET_RANGE);
+    let range = FEISHU_SHEET_RANGE;
+    if (!range) {
+      const sheetId = await getFirstSheetId(token, sheetToken);
+      range = sheetId + "!A1:Z1000";
+    }
+    const values = await readRange(token, sheetToken, range);
     const products = buildProducts(values, SITE_URL || "");
-    if (!products.length) return fallback(context);
+    if (!products.length) return fallback(context, isDebug);
+    if (isDebug) {
+      return new Response(JSON.stringify({
+        source: "feishu",
+        range,
+        count: products.length,
+        sample: products[0],
+      }), { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+    }
     return new Response(JSON.stringify({ products }), {
       headers: {
         "Content-Type": "application/json",
         "Cache-Control": "public, max-age=60, s-maxage=60",
         "Access-Control-Allow-Origin": "*",
+        "X-Data-Source": "feishu",
       },
     });
   } catch (e) {
     // Feishu API hiccup -> degrade gracefully, never break the storefront.
-    return fallback(context);
+    if (isDebug) {
+      return new Response(JSON.stringify({
+        source: "fallback",
+        reason: "Feishu read failed",
+        error: String(e && e.message ? e.message : e),
+      }), { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+    }
+    return fallback(context, false);
   }
 }
 
