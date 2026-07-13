@@ -12,11 +12,13 @@
 const API_BASE = "https://open.feishu.cn";
 
 // Canonical field -> header synonyms (Chinese or English). First match wins.
-const FIELDS = ["cat", "img", "zh_name", "zh_desc", "zh_price",
+const FIELDS = ["cat", "cat_zh", "cat_en", "img", "zh_name", "zh_desc", "zh_price",
                 "en_name", "en_desc", "en_price", "moq", "lead", "term"];
 
 const SYNONYMS = {
   cat:      ["cat", "分类", "类别", "category", "类型"],
+  cat_zh:   ["cat_zh", "cat zh", "中文分类", "分类(中)", "分类（中）"],
+  cat_en:   ["cat_en", "cat en", "英文分类", "分类(英)", "分类（英）"],
   img:      ["img", "image", "图片", "图", "产品图"],
   zh_name:  ["zh_name", "zh name", "中文名", "中文名称", "名称(中)", "名称（中）"],
   zh_desc:  ["zh_desc", "中文描述", "描述(中)", "描述（中）"],
@@ -94,8 +96,14 @@ function buildProducts(values, siteUrl) {
     };
     let img = get("img");
     if (img && img.startsWith("images/") && siteUrl) img = siteUrl + "/" + img;
+    // Category code: explicit 分类 column, else derive a stable slug from bilingual label
+    let cat = get("cat");
+    if (!cat) {
+      cat = (get("cat_en") || get("cat_zh") || "stationery").toString().trim().toLowerCase().replace(/\s+/g, "-");
+    }
     out.push({
-      cat: get("cat") || "stationery",
+      cat,
+      catLabel: { zh: get("cat_zh"), en: get("cat_en") },
       img,
       zh: { name: get("zh_name"), desc: get("zh_desc"), price: get("zh_price") },
       en: { name: get("en_name"), desc: get("en_desc"), price: get("en_price") },

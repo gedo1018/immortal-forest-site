@@ -50,6 +50,15 @@
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   }
+  // Bilingual category label: prefer per-product catLabel (from Feishu),
+  // fall back to built-in CAT_LABELS, then to the raw code.
+  function catLabelOf(p) {
+    const L = p.catLabel || {};
+    if (L[lang]) return L[lang];
+    const labels = CAT_LABELS[lang] || CAT_LABELS.zh;
+    if (labels[p.cat]) return labels[p.cat];
+    return p.cat;
+  }
   function thumb(p) {
     if (p.img) return '<img src="' + esc(p.img) + '" alt="' + esc((p[lang] || p.zh).name) + '" loading="lazy" />';
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[p.cat] || ICONS.stationery) + "</svg>";
@@ -66,7 +75,7 @@
     const L = p[lang] || p.zh;
     return '<article class="prod spotlight reveal" data-cat="' + esc(p.cat) + '">' +
       '<div class="thumb">' + thumb(p) + "</div>" +
-      '<span class="tag">' + esc((CAT_LABELS[lang] || CAT_LABELS.zh)[p.cat] || p.cat) + "</span>" +
+      '<span class="tag">' + esc(catLabelOf(p)) + "</span>" +
       "<h3>" + esc(L.name) + "</h3>" +
       "<p>" + esc(L.desc) + "</p>" +
       '<div class="price">' + esc(L.price) + "</div>" +
@@ -103,22 +112,26 @@
   // ---- category filter (dynamic: generated from live data) ----
   const filterBar = document.getElementById("filterBar");
   if (filterBar) {
-    // Extract unique categories from data, preserving first-seen order
+    // Extract unique categories from data, preserving first-seen order;
+    // also remember each category's bilingual label (first product wins).
     const seen = {};
     const cats = [];
+    const catLabelsMap = {};
     for (const p of data) {
       const c = p.cat;
       if (c && !seen[c]) { seen[c] = true; cats.push(c); }
+      if (c && (p.catLabel && (p.catLabel.zh || p.catLabel.en)) && !catLabelsMap[c]) {
+        catLabelsMap[c] = p.catLabel;
+      }
     }
 
     // Build dynamic filter buttons (after the "全部" button)
-    const labels = CAT_LABELS[lang] || CAT_LABELS.zh;
     const frag = document.createDocumentFragment();
     cats.forEach(c => {
       const btn = document.createElement("button");
       btn.className = "filter";
       btn.dataset.cat = c;
-      btn.textContent = labels[c] || c; // fall back to raw key if no translation
+      btn.textContent = catLabelOf({ cat: c, catLabel: catLabelsMap[c] });
       frag.appendChild(btn);
     });
     filterBar.appendChild(frag);
