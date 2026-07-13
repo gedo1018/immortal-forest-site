@@ -1,193 +1,67 @@
 {
   "products": [
     {
-      "cat": "stationery",
+      "cat": "DATA_BRANCH_PROOF",
       "img": "",
-      "zh": {
-        "name": "森呼吸中性笔",
-        "desc": "竹纤笔身、速干墨芯，书写如林间清风。",
-        "price": "¥ 3.9 / 支"
-      },
-      "en": {
-        "name": "Forest-Breath Gel Pen",
-        "desc": "Bamboo barrel, quick-dry ink. Writing like a breeze through the woods.",
-        "price": "from $0.12 / pc"
-      },
-      "spec": {
-        "moq": "5,000 pcs",
-        "lead": "7–15 days",
-        "term": "FOB Shanghai"
-      }
+      "zh": { "name": "森呼吸中性笔", "desc": "竹纤笔身、速干墨芯，书写如林间清风。", "price": "¥ 3.9 / 支" },
+      "en": { "name": "Forest-Breath Gel Pen", "desc": "Bamboo barrel, quick-dry ink. Writing like a breeze through the woods.", "price": "from $0.12 / pc" },
+      "spec": { "moq": "5,000 pcs", "lead": "7–15 days", "term": "FOB Shanghai" }
     },
     {
       "cat": "stationery",
       "img": "",
-      "zh": {
-        "name": "苔纹再生笔记本",
-        "desc": "100% 回收纸、大豆油墨，记录也温柔。",
-        "price": "¥ 19.9 / 本"
-      },
-      "en": {
-        "name": "Moss Recycled Notebook",
-        "desc": "100% recycled paper, soy ink. Gentle on the record, gentle on earth.",
-        "price": "from $1.20 / unit"
-      },
-      "spec": {
-        "moq": "2,000 pcs",
-        "lead": "10–18 days",
-        "term": "FOB Shanghai"
-      }
+      "zh": { "name": "苔纹再生笔记本", "desc": "100% 回收纸、大豆油墨，记录也温柔。", "price": "¥ 19.9 / 本" },
+      "en": { "name": "Moss Recycled Notebook", "desc": "100% recycled paper, soy ink. Gentle on the record, gentle on earth.", "price": "from $1.20 / unit" },
+      "spec": { "moq": "2,000 pcs", "lead": "10–18 days", "term": "FOB Shanghai" }
     },
     {
       "cat": "device",
       "img": "",
-      "zh": {
-        "name": "云栖激光打印机",
-        "desc": "静音低耗、手机直连，办公室的安静伙伴。",
-        "price": "¥ 1,299 起"
-      },
-      "en": {
-        "name": "Cloud-Nest Laser Printer",
-        "desc": "Quiet, low-power, mobile-direct. The calm companion of any office.",
-        "price": "from $169 / unit"
-      },
-      "spec": {
-        "moq": "50 units",
-        "lead": "15–25 days",
-        "term": "FOB Ningbo"
-      }
+      "zh": { "name": "云栖激光打印机", "desc": "静音低耗、手机直连，办公室的安静伙伴。", "price": "¥ 1,299 起" },
+      "en": { "name": "Cloud-Nest Laser Printer", "desc": "Quiet, low-power, mobile-direct. The calm companion of any office.", "price": "from $169 / unit" },
+      "spec": { "moq": "50 units", "lead": "15–25 days", "term": "FOB Ningbo" }
     },
     {
       "cat": "device",
       "img": "",
-      "zh": {
-        "name": "雾林投影仪",
-        "desc": "1080P 便携、自动对焦，会议即刻开始。",
-        "price": "¥ 2,480 起"
-      },
-      "en": {
-        "name": "Mist-Forest Projector",
-        "desc": "1080P portable, auto-focus. Meetings start in a second.",
-        "price": "from $320 / unit"
-      },
-      "spec": {
-        "moq": "30 units",
-        "lead": "20–30 days",
-        "term": "FOB Ningbo"
-      }
+      "zh": { "name": "雾林投影仪", "desc": "1080P 便携、自动对焦，会议即刻开始。", "price": "¥ 2,480 起" },
+      "en": { "name": "Mist-Forest Projector", "desc": "1080P portable, auto-focus. Meetings start in a second.", "price": "from $320 / unit" },
+      "spec": { "moq": "30 units", "lead": "20–30 days", "term": "FOB Ningbo" }
     },
     {
       "cat": "furniture",
       "img": "",
-      "zh": {
-        "name": "苔原升降桌",
-        "desc": "记忆高度、竹面环保，坐立之间自由切换。",
-        "price": "¥ 1,880 起"
-      },
-      "en": {
-        "name": "Tundra Standing Desk",
-        "desc": "Memory height, eco bamboo top. Switch sit/stand freely.",
-        "price": "from $245 / unit"
-      },
-      "spec": {
-        "moq": "100 units",
-        "lead": "20–30 days",
-        "term": "FOB Shanghai"
-      }
+      "zh": { "name": "苔原升降桌", "desc": "记忆高度、竹面环保，坐立之间自由切换。", "price": "¥ 1,880 起" },
+      "en": { "name": "Tundra Standing Desk", "desc": "Memory height, eco bamboo top. Switch sit/stand freely.", "price": "from $245 / unit" },
+      "spec": { "moq": "100 units", "lead": "20–30 days", "term": "FOB Shanghai" }
     },
     {
       "cat": "furniture",
       "img": "",
-      "zh": {
-        "name": "叠翠模块化柜",
-        "desc": "自由拼搭、无醛板材，空间随你生长。",
-        "price": "¥ 760 起"
-      },
-      "en": {
-        "name": "Verdant Modular Cabinet",
-        "desc": "Free-combo, formaldehyde-free board. Space grows with you.",
-        "price": "from $58 / unit"
-      },
-      "spec": {
-        "moq": "200 units",
-        "lead": "20–35 days",
-        "term": "FOB Shanghai"
-      }
+      "zh": { "name": "叠翠模块化柜", "desc": "自由拼搭、无醛板材，空间随你生长。", "price": "¥ 760 起" },
+      "en": { "name": "Verdant Modular Cabinet", "desc": "Free-combo, formaldehyde-free board. Space grows with you.", "price": "from $58 / unit" },
+      "spec": { "moq": "200 units", "lead": "20–35 days", "term": "FOB Shanghai" }
     },
     {
       "cat": "digital",
       "img": "",
-      "zh": {
-        "name": "采购 SaaS 后台",
-        "desc": "用量预测、预算管控，采购一目了然。",
-        "price": "按席位订阅"
-      },
-      "en": {
-        "name": "Procurement SaaS",
-        "desc": "Demand forecast & budget control. Procurement at a glance.",
-        "price": "Per-seat subscription"
-      },
-      "spec": {
-        "moq": "1 account",
-        "lead": "live",
-        "term": "Global"
-      }
+      "zh": { "name": "采购 SaaS 后台", "desc": "用量预测、预算管控，采购一目了然。", "price": "按席位订阅" },
+      "en": { "name": "Procurement SaaS", "desc": "Demand forecast & budget control. Procurement at a glance.", "price": "Per-seat subscription" },
+      "spec": { "moq": "1 account", "lead": "live", "term": "Global" }
     },
     {
       "cat": "digital",
       "img": "",
-      "zh": {
-        "name": "智能补给机器人",
-        "desc": "低值耗材自动续命，告别临时断档。",
-        "price": "企业定制"
-      },
-      "en": {
-        "name": "Smart Replenish Bot",
-        "desc": "Low-value consumables auto-renewed. No more stockouts.",
-        "price": "Custom enterprise"
-      },
-      "spec": {
-        "moq": "project",
-        "lead": "30+ days",
-        "term": "ODM"
-      }
+      "zh": { "name": "智能补给机器人", "desc": "低值耗材自动续命，告别临时断档。", "price": "企业定制" },
+      "en": { "name": "Smart Replenish Bot", "desc": "Low-value consumables auto-renewed. No more stockouts.", "price": "Custom enterprise" },
+      "spec": { "moq": "project", "lead": "30+ days", "term": "ODM" }
     },
     {
       "cat": "consumable",
       "img": "",
-      "zh": {
-        "name": "森系环保湿巾",
-        "desc": "植物萃取、可冲散，办公清洁无负担。",
-        "price": "¥ 29.9 / 盒"
-      },
-      "en": {
-        "name": "Forest Eco Wipes",
-        "desc": "Plant-based, flushable. Office cleaning, zero burden.",
-        "price": "from $3.50 / box"
-      },
-      "spec": {
-        "moq": "1,000 boxes",
-        "lead": "10–18 days",
-        "term": "FOB Shanghai"
-      }
-    },
-    {
-      "cat": "stationery",
-      "zh": {
-        "name": "1",
-        "desc": "1",
-        "price": "1"
-      },
-      "en": {
-        "name": "1",
-        "desc": "1",
-        "price": "1"
-      },
-      "spec": {
-        "moq": "1",
-        "lead": "1",
-        "term": "1"
-      }
+      "zh": { "name": "森系环保湿巾", "desc": "植物萃取、可冲散，办公清洁无负担。", "price": "¥ 29.9 / 盒" },
+      "en": { "name": "Forest Eco Wipes", "desc": "Plant-based, flushable. Office cleaning, zero burden.", "price": "from $3.50 / box" },
+      "spec": { "moq": "1,000 boxes", "lead": "10–18 days", "term": "FOB Shanghai" }
     }
   ]
 }
