@@ -1,9 +1,14 @@
 [build]
   publish = "."
-  command = ""
+  command = "python3 scripts/sync_feishu.py"
 
-# Pure static site. No build step required.
-# After connecting this repo to Netlify:
-#   1. Site settings -> Identity -> Enable (this powers the /admin login)
-#   2. Identity -> Services -> Git Gateway -> Enable
-#   3. Visit /admin/ and log in with an invited Identity user.
+# Every deploy runs the build command first: it fetches the latest product
+# catalog from the Feishu sheet (credentials live in
+# Site settings -> Environment variables) and regenerates products.json
+# BEFORE the site is published. If Feishu is unreachable or returns no
+# data, the script keeps the existing products.json and the deploy still succeeds.
+#
+# How to sync after editing the Feishu sheet:
+#   - Manual : open the Deploy Hook URL
+#              (Site settings -> Build & deploy -> Build hooks -> create one)
+#   - Auto   : point a free cron (e.g. cron-job.org) at that hook, every 30 min
