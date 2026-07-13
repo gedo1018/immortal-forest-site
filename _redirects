@@ -1,0 +1,10 @@
+# Cloudflare Pages _redirects
+# 让无后缀地址自动跳转到对应的 .html 静态页面，
+# 避免访问 /products 等被旧函数或扩展名解析误判。
+/products  /products.html  301
+/about     /about.html     301
+/contact   /contact.html   301
+/home      /               301
+/en/products  /en/products.html  301
+/en/about     /en/about.html     301
+/en/contact   /en/contact.html   301
