@@ -126,14 +126,24 @@ def main():
     sp_token = os.environ.get("FEISHU_SPREADSHEET_TOKEN")
     rng = os.environ.get("FEISHU_SHEET_RANGE")
     if not all([app_id, app_secret, sp_token, rng]):
-        print("ERROR: missing required env vars "
-              "(FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_SPREADSHEET_TOKEN, FEISHU_SHEET_RANGE)",
-              file=sys.stderr)
-        sys.exit(1)
+        # No creds configured yet (or running a normal deploy) -> keep existing data.
+        print("WARN: Feishu env vars not set — skipping sync, "
+              "keeping existing products.json.", file=sys.stderr)
+        sys.exit(0)
 
-    token = get_tenant_token(app_id, app_secret)
-    values = read_range(token, sp_token, rng)
-    products = build_products(values)
+    try:
+        token = get_tenant_token(app_id, app_secret)
+        values = read_range(token, sp_token, rng)
+        products = build_products(values)
+    except Exception as e:
+        # Never break the site deploy / GitHub Action on a transient Feishu error.
+        print("WARN: Feishu fetch failed (%s) — keeping existing products.json." % e,
+              file=sys.stderr)
+        sys.exit(0)
+
+    if not products:
+        print("WARN: Feishu returned 0 products — keeping existing products.json.")
+        sys.exit(0)
 
     with open(OUTPUT, "w", encoding="utf-8") as f:
         json.dump({"products": products}, f, ensure_ascii=False, indent=2)
