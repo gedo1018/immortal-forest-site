@@ -104,7 +104,7 @@
     const status = form.querySelector(".form-status");
     const submitBtn = form.querySelector('button[type="submit"]');
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    form.addEventListener("submit", e => {
+    form.addEventListener("submit", async e => {
       e.preventDefault();
       let ok = true;
       form.querySelectorAll("[required]").forEach(input => {
