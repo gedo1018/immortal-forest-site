@@ -2,17 +2,17 @@
 //  仙人森林 · IMMORTAL FOREST — Cloudflare Pages Function
 //  POST /api/contact  ->  { ok: true }
 //
-//  Receives the contact/form inquiry, then:
-//   1) (optional) pushes a REAL-TIME alert to a WeCom
-//      (企业微信) group bot via webhook — so you get an
-//      instant phone notification the moment a lead arrives.
-//   2) (optional) archives the row to a Feishu sheet.
+//  Receives the contact/form inquiry, then pushes a
+//  REAL-TIME alert to whichever chat channel is configured
+//  (you only need ONE of them):
+//    - WECOM_WEBHOOK    企业微信群机器人 (webhook URL)
+//    - SERVERCHAN_KEY   Server酱  -> 推送到个人微信 (扫码关注公众号)
+//    - PUSHPLUS_TOKEN   PushPlus  -> 推送到个人微信 (扫码关注公众号)
+//  Also archives the row to a Feishu sheet (optional).
 //
-//  Neither channel is required: the form always returns
-//  { ok: true } so a lead is never lost at the front end.
-//  Every arrival is also logged to Cloudflare Functions
-//  logs so you can verify delivery even before wiring up
-//  a channel.
+//  The form always returns { ok: true } so a lead is never
+//  lost at the front end. Every arrival is also logged to
+//  Cloudflare Functions logs so you can verify delivery.
 // =========================================================
 
 const API_BASE = "https://open.feishu.cn";
@@ -35,7 +35,7 @@ async function getToken(appId, appSecret) {
 export async function onRequestPost(context) {
   const {
     FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_INQUIRY_TOKEN, FEISHU_INQUIRY_RANGE,
-    WECOM_WEBHOOK,
+    WECOM_WEBHOOK, SERVERCHAN_KEY, PUSHPLUS_TOKEN,
   } = context.env;
   const CORS = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
 
@@ -53,7 +53,7 @@ export async function onRequestPost(context) {
   const row = [
     time,
     data.name || "",
-    data.company || data.country || "",   // zh has company, en has country
+    data.company || data.country || "",
     data.email || "",
     data.type || "",
     data.msg || "",
@@ -63,17 +63,28 @@ export async function onRequestPost(context) {
   // Always log the arrival so it's verifiable in Cloudflare Functions logs.
   console.log("Contact submission:", JSON.stringify({ time, ...data, ip }));
 
-  // --- Real-time WeCom (企业微信) push ---
+  const title = "新询盘 · IMMORTAL FOREST";
+  const plain = [
+    "姓名: " + (data.name || "-"),
+    "公司/国家: " + (data.company || data.country || "-"),
+    "邮箱: " + (data.email || "-"),
+    "类型: " + (data.type || "-"),
+    "留言: " + (data.msg || "-"),
+    "IP: " + ip,
+    "时间: " + time,
+  ].join("\n");
+
+  // --- Channel 1: WeCom (企业微信) group bot webhook ---
   if (WECOM_WEBHOOK) {
     const content = [
-      "🔔 **新询盘 · IMMORTAL FOREST**",
-      `> **姓名**: ${data.name || "-"}`,
-      `> **公司/国家**: ${data.company || data.country || "-"}`,
-      `> **邮箱**: ${data.email || "-"}`,
-      `> **类型**: ${data.type || "-"}`,
-      `> **留言**: ${data.msg || "-"}`,
-      `> **IP**: ${ip}`,
-      `> **时间**: ${time}`,
+      "🔔 **" + title + "**",
+      "> **姓名**: " + (data.name || "-"),
+      "> **公司/国家**: " + (data.company || data.country || "-"),
+      "> **邮箱**: " + (data.email || "-"),
+      "> **类型**: " + (data.type || "-"),
+      "> **留言**: " + (data.msg || "-"),
+      "> **IP**: " + ip,
+      "> **时间**: " + time,
     ].join("\n");
     try {
       const r = await fetch(WECOM_WEBHOOK, {
@@ -85,6 +96,36 @@ export async function onRequestPost(context) {
       if (j.errcode !== 0) console.error("WeCom push failed:", JSON.stringify(j));
     } catch (e) {
       console.error("WeCom push error:", e.message);
+    }
+  }
+
+  // --- Channel 2: Server酱 (personal WeChat via official account) ---
+  if (SERVERCHAN_KEY) {
+    try {
+      const r = await fetch("https://sctapi.ftqq.com/" + SERVERCHAN_KEY + ".send", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "title=" + encodeURIComponent(title) + "&desp=" + encodeURIComponent(plain),
+      });
+      const j = await r.json();
+      if (j.code !== 0) console.error("ServerChan push failed:", JSON.stringify(j));
+    } catch (e) {
+      console.error("ServerChan push error:", e.message);
+    }
+  }
+
+  // --- Channel 3: PushPlus (personal WeChat via official account) ---
+  if (PUSHPLUS_TOKEN) {
+    try {
+      const r = await fetch("https://www.pushplus.plus/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: PUSHPLUS_TOKEN, title, content: plain }),
+      });
+      const j = await r.json();
+      if (j.code !== 200) console.error("PushPlus push failed:", JSON.stringify(j));
+    } catch (e) {
+      console.error("PushPlus push error:", e.message);
     }
   }
 
