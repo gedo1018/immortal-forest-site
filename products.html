@@ -50,13 +50,9 @@
   <!-- FILTER + GRID -->
   <section class="section" style="padding-top:0;">
     <div class="container">
-      <div class="filter-bar reveal">
+      <div class="filter-bar reveal" id="filterBar">
         <button class="filter active" data-cat="all">全部</button>
-        <button class="filter" data-cat="stationery">文具纸张</button>
-        <button class="filter" data-cat="device">办公设备</button>
-        <button class="filter" data-cat="furniture">家具收纳</button>
-        <button class="filter" data-cat="digital">数字办公</button>
-        <button class="filter" data-cat="consumable">清洁耗材</button>
+        <!-- 分类按钮由 catalog.js 根据飞书数据动态生成 -->
       </div>
 
       <div class="prod-grid" id="productGrid">

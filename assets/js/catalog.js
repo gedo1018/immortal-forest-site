@@ -100,12 +100,36 @@
     });
   }
 
-  // ---- category filter ----
-  const filters = document.querySelectorAll(".filter");
-  filters.forEach(f => f.addEventListener("click", () => {
-    filters.forEach(x => x.classList.remove("active"));
-    f.classList.add("active");
-    const cat = f.dataset.cat;
-    cards.forEach(c => c.classList.toggle("hide", !(cat === "all" || c.dataset.cat === cat)));
-  }));
+  // ---- category filter (dynamic: generated from live data) ----
+  const filterBar = document.getElementById("filterBar");
+  if (filterBar) {
+    // Extract unique categories from data, preserving first-seen order
+    const seen = {};
+    const cats = [];
+    for (const p of data) {
+      const c = p.cat;
+      if (c && !seen[c]) { seen[c] = true; cats.push(c); }
+    }
+
+    // Build dynamic filter buttons (after the "全部" button)
+    const labels = CAT_LABELS[lang] || CAT_LABELS.zh;
+    const frag = document.createDocumentFragment();
+    cats.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "filter";
+      btn.dataset.cat = c;
+      btn.textContent = labels[c] || c; // fall back to raw key if no translation
+      frag.appendChild(btn);
+    });
+    filterBar.appendChild(frag);
+
+    // Bind click events to ALL filters (including "全部")
+    const filters = filterBar.querySelectorAll(".filter");
+    filters.forEach(f => f.addEventListener("click", () => {
+      filters.forEach(x => x.classList.remove("active"));
+      f.classList.add("active");
+      const cat = f.dataset.cat;
+      cards.forEach(c => c.classList.toggle("hide", !(cat === "all" || c.dataset.cat === cat)));
+    }));
+  }
 })();
