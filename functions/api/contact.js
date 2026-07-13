@@ -35,7 +35,7 @@ async function getToken(appId, appSecret) {
 export async function onRequestPost(context) {
   const {
     FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_INQUIRY_TOKEN, FEISHU_INQUIRY_RANGE,
-    WECOM_WEBHOOK, SERVERCHAN_KEY, PUSHPLUS_TOKEN,
+    WECOM_WEBHOOK, SERVERCHAN_KEY, PUSHPLUS_TOKEN, FEISHU_GROUP_WEBHOOK,
   } = context.env;
   const CORS = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
 
@@ -126,6 +126,26 @@ export async function onRequestPost(context) {
       if (j.code !== 200) console.error("PushPlus push failed:", JSON.stringify(j));
     } catch (e) {
       console.error("PushPlus push error:", e.message);
+    }
+  }
+
+  // --- Channel 4: Feishu (飞书) group bot webhook ---
+  if (FEISHU_GROUP_WEBHOOK) {
+    try {
+      const r = await fetch(FEISHU_GROUP_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          msg_type: "text",
+          content: { text: title + "\n" + plain },
+        }),
+      });
+      const j = await r.json();
+      if (j.code !== 0 && j.StatusMessage !== "success") {
+        console.error("Feishu group push failed:", JSON.stringify(j));
+      }
+    } catch (e) {
+      console.error("Feishu group push error:", e.message);
     }
   }
 
