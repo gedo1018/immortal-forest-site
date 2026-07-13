@@ -1,8 +1,9 @@
 /* =========================================================
    仙人森林 · IMMORTAL FOREST — product catalog renderer
-   Data-driven. Loads /products.json (the source of truth,
-   edited via Decap CMS at /admin/). Falls back to
-   window.PRODUCTS (assets/js/products-data.js) when offline.
+   Data-driven. Loads /api/products (a Cloudflare Function that
+   reads the Feishu sheet in real time; it falls back to the
+   committed /products.json when Feishu is unreachable).
+   Falls back to window.PRODUCTS (assets/js/products-data.js) when offline.
    Language is derived from <html lang>.
    ========================================================= */
 (async function () {
@@ -26,15 +27,15 @@
     consumable: '<path d="M9 3h6v4l-2 2v3l3 3v6H8v-6l3-3V9L9 7Z"/><path d="M7 3v2M17 3v2"/>'
   };
 
-  // ---- data source: /products.json (managed by Decap CMS) ----
+  // ---- data source: /api/products (Cloudflare Function -> Feishu) ----
   let data = [];
   try {
-    const res = await fetch("/products.json", { cache: "no-store" });
+    const res = await fetch("/api/products", { cache: "no-store" });
     if (res.ok) {
       const json = await res.json();
       data = Array.isArray(json) ? json : (json.products || []);
     }
-  } catch (e) { /* offline or file missing -> use fallback */ }
+  } catch (e) { /* offline or function missing -> use fallback */ }
 
   // legacy local-editor draft preview (?draft=1) — kept for compatibility
   if (new URLSearchParams(location.search).has("draft")) {

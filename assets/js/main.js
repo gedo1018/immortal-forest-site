@@ -123,13 +123,27 @@
       const label = submitBtn.querySelector(".lbl");
       const orig = label ? label.textContent : submitBtn.textContent;
       if (label) label.textContent = "发送中…";
-      setTimeout(() => {
-        status.textContent = "已收到您的信息，我们的顾问将在 1 个工作日内与您联系 ✦";
-        status.className = "form-status ok";
-        form.reset();
+
+      try {
+        const resp = await fetch("/api/contact", {
+          method: "POST",
+          headers: { "Accept": "application/json" },
+          body: new FormData(form),
+        });
+        if (resp.ok) {
+          status.textContent = "已收到您的信息，我们的顾问将在 1 个工作日内与您联系 ✦";
+          status.className = "form-status ok";
+          form.reset();
+        } else {
+          throw new Error("server " + resp.status);
+        }
+      } catch (err) {
+        status.textContent = "发送失败，请稍后重试或直接邮件联系我们。";
+        status.className = "form-status bad";
+      } finally {
         submitBtn.disabled = false;
         if (label) label.textContent = orig;
-      }, 1100);
+      }
     });
   }
 

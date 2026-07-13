@@ -2,6 +2,8 @@
 <html lang="zh-CN" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
+  <!-- Progressive enhancement: enable reveal animations only when JS is available -->
+  <script>(function(){document.documentElement.classList.add('js')})()</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>仙人森林 · 办公用品新物种 | Immortal Forest</title>
   <meta name="description" content="仙人森林 Immortal Forest —— 以自然灵感与设计科技，重新定义现代办公用品。文具、设备、家具、数字办公一站式解决方案。" />
@@ -11,6 +13,16 @@
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body data-page="home">
+
+  <!-- Forward Netlify Identity invite/confirmation tokens from site root to /admin/ -->
+  <script>
+    (function () {
+      var h = window.location.hash || "";
+      if (/invite_token|confirmation_token|recovery_token/.test(h)) {
+        window.location.replace("/admin/" + h);
+      }
+    })();
+  </script>
 
   <!-- NAV -->
   <header class="nav">
