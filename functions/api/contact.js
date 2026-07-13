@@ -2,11 +2,17 @@
 //  仙人森林 · IMMORTAL FOREST — Cloudflare Pages Function
 //  POST /api/contact  ->  { ok: true }
 //
-//  Receives the contact/form inquiry and appends it to a
-//  Feishu sheet (a dedicated "inquiry" table). If Feishu is
-//  not configured, the submission is still accepted (never
-//  drops a lead) — you just won't see it in the sheet until
-//  creds are wired up.
+//  Receives the contact/form inquiry, then:
+//   1) (optional) pushes a REAL-TIME alert to a WeCom
+//      (企业微信) group bot via webhook — so you get an
+//      instant phone notification the moment a lead arrives.
+//   2) (optional) archives the row to a Feishu sheet.
+//
+//  Neither channel is required: the form always returns
+//  { ok: true } so a lead is never lost at the front end.
+//  Every arrival is also logged to Cloudflare Functions
+//  logs so you can verify delivery even before wiring up
+//  a channel.
 // =========================================================
 
 const API_BASE = "https://open.feishu.cn";
@@ -27,7 +33,10 @@ async function getToken(appId, appSecret) {
 }
 
 export async function onRequestPost(context) {
-  const { FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_INQUIRY_TOKEN, FEISHU_INQUIRY_RANGE } = context.env;
+  const {
+    FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_INQUIRY_TOKEN, FEISHU_INQUIRY_RANGE,
+    WECOM_WEBHOOK,
+  } = context.env;
   const CORS = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
 
   // Parse submitted data (FormData or JSON).
@@ -39,17 +48,47 @@ export async function onRequestPost(context) {
     try { data = await context.request.json(); } catch (_) { /* ignore */ }
   }
 
+  const time = new Date().toISOString();
+  const ip = context.request.headers.get("cf-connecting-ip") || "";
   const row = [
-    new Date().toISOString(),
+    time,
     data.name || "",
     data.company || data.country || "",   // zh has company, en has country
     data.email || "",
     data.type || "",
     data.msg || "",
-    context.request.headers.get("cf-connecting-ip") || "",
+    ip,
   ];
 
-  // Only write to Feishu when fully configured; otherwise accept silently.
+  // Always log the arrival so it's verifiable in Cloudflare Functions logs.
+  console.log("Contact submission:", JSON.stringify({ time, ...data, ip }));
+
+  // --- Real-time WeCom (企业微信) push ---
+  if (WECOM_WEBHOOK) {
+    const content = [
+      "🔔 **新询盘 · IMMORTAL FOREST**",
+      `> **姓名**: ${data.name || "-"}`,
+      `> **公司/国家**: ${data.company || data.country || "-"}`,
+      `> **邮箱**: ${data.email || "-"}`,
+      `> **类型**: ${data.type || "-"}`,
+      `> **留言**: ${data.msg || "-"}`,
+      `> **IP**: ${ip}`,
+      `> **时间**: ${time}`,
+    ].join("\n");
+    try {
+      const r = await fetch(WECOM_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ msgtype: "markdown", markdown: { content } }),
+      });
+      const j = await r.json();
+      if (j.errcode !== 0) console.error("WeCom push failed:", JSON.stringify(j));
+    } catch (e) {
+      console.error("WeCom push error:", e.message);
+    }
+  }
+
+  // --- Archive to Feishu sheet (optional, requires write perms) ---
   if (FEISHU_APP_ID && FEISHU_APP_SECRET && FEISHU_INQUIRY_TOKEN && FEISHU_INQUIRY_RANGE) {
     try {
       const token = await getToken(FEISHU_APP_ID, FEISHU_APP_SECRET);
