@@ -1,7 +1,7 @@
 {
   "products": [
     {
-      "cat": "RAW_PROOF",
+      "cat": "stationery",
       "img": "",
       "zh": { "name": "森呼吸中性笔", "desc": "竹纤笔身、速干墨芯，书写如林间清风。", "price": "¥ 3.9 / 支" },
       "en": { "name": "Forest-Breath Gel Pen", "desc": "Bamboo barrel, quick-dry ink. Writing like a breeze through the woods.", "price": "from $0.12 / pc" },
