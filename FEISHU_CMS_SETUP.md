@@ -1,6 +1,6 @@
 # 仙人森林 · 飞书表格后台 配置指南
 
-把产品数据从「Decap 后台」迁到「飞书表格」。你日常只在飞书里改表格，网站每 30 分钟自动同步，也能点一下按钮立刻同步。
+把产品数据从「Decap 后台」迁到「飞书表格」。你日常只在飞书里改表格；网站在每次部署时自动从飞书拉取最新数据生成 `products.json`。
 
 ---
 
@@ -9,17 +9,14 @@
 ```
 你在飞书表格里改产品
         │
-        ▼  （每 30 分钟 / 或手动点一下）
-GitHub Actions 自动运行
+        ▼  你点一下「部署钩子」链接（或免费定时任务每 30 分钟自动触发）
+Netlify 重新部署
         │
-        ▼
-脚本读取飞书表格 → 生成 products.json
-        │
-        ▼
-推回 GitHub → Netlify 自动部署 → 网站更新
+        ▼  构建阶段自动运行：拉飞书表格 → 生成 products.json
+网站更新
 ```
 
-你（非技术）每天只做一件事：**打开飞书表格，改内容，关掉。** 其余全自动。
+你（非技术）每天只做一件事：**打开飞书表格，改内容，关掉；需要上线时点一下同步链接。** 其余全自动。
 
 ---
 
@@ -39,18 +36,17 @@ GitHub Actions 自动运行
 1. 在飞书里新建一个**电子表格**（不是多维表格），命名为「仙人森林产品库」。
 2. 把表头按下方「列说明」填好（或直接导入本项目里的 `docs/feishu_template.csv`）。
 3. 点表格右上角 **「...」→ 更多 → 添加文档应用**（或在共享里搜索你刚建的应用名），把应用加进来并给**可读**权限。
-   - 这样应用才能通过 API 读到这个表。
 4. 打开这个表格，从地址栏复制两样东西：
    - **表格 Token**：URL 里 `sheets/` 后面那一长串，如
      `https://...feishu.cn/sheets/【这就是 token】/???sheet=...`
    - **工作表 ID（sheetId）**：URL 里 `sheet=` 后面的部分，如 `...&sheet=【这就是 sheetId】`
 
-### 第 3 步：把密钥填进 GitHub Secrets
+### 第 3 步：把密钥填进 Netlify（不是 GitHub）
 
-1. 打开 GitHub 仓库 `gedo1018/immortal-forest-site` → **Settings → Secrets and variables → Actions → New repository secret**。
-2. 依次添加：
+1. 打开 Netlify 后台 → 你的站点 `immortal-forest` → **Site settings → Environment variables → Add a variable**。
+2. 依次添加（全部填到 Netlify，不要填 GitHub）：
 
-| Secret 名称 | 值 |
+| 变量名 | 值 |
 |------|------|
 | `FEISHU_APP_ID` | 第 1 步的 App ID |
 | `FEISHU_APP_SECRET` | 第 1 步的 App Secret |
@@ -58,7 +54,13 @@ GitHub Actions 自动运行
 | `FEISHU_SHEET_RANGE` | 例如 `Sheet1!A1:K1000`（把 `Sheet1` 换成你的工作表名，`K` 是第 11 列） |
 | `SITE_URL` | `https://immortal-forest.netlify.app` |
 
-> 工作表名不一定是 `Sheet1`，看表格底部标签页的名字。列数 11 列对应 A–K。
+> 工作表名看表格底部标签页的名字；列数 11 列对应 A–K。
+
+### 第 4 步：创建「部署钩子」（用于手动/自动同步）
+
+1. Netlify → **Site settings → Build & deploy → Build hooks → Add build hook**。
+2. 起个名（如 `sync-from-feishu`），分支选 `main`，创建。
+3. 复制生成的 **URL**（形如 `https://api.netlify.com/build_hooks/xxxx`）。这就是你的「一键同步链接」。
 
 ---
 
@@ -81,9 +83,7 @@ GitHub Actions 自动运行
 | 贸易术语 | 贸易条款 | `FOB Shanghai` | `spec.term` |
 
 - 留空的单元格 = 空字符串（网站会自动用图标占位代替缺图）。
-- 想新增产品：在表格末尾加一行即可。
-- 想删除：删掉那一行。
-- 想调整顺序：直接拖行。
+- 新增产品：在表格末尾加一行。删除：删掉那一行。调整顺序：直接拖行。
 
 ---
 
@@ -102,23 +102,24 @@ GitHub Actions 自动运行
 
 ## 五、怎么同步 / 验证
 
-- **自动**：改完飞书表格，最多 30 分钟网站自己更新。
-- **立刻同步**：GitHub 仓库 → **Actions → Sync products from Feishu → Run workflow**（点一下就行，几十秒完成）。
-- **验证**：打开 `https://immortal-forest.netlify.app/`，看产品是否更新；或看 GitHub 的 Actions 运行记录是否成功。
+- **手动同步（推荐先试）**：浏览器打开第 4 步拿到的「部署钩子」URL，回车 → Netlify 开始部署（几十秒）→ 网站更新。
+- **自动同步（每 30 分钟）**：注册免费 https://cron-job.org ，建一个任务，URL 填部署钩子，频率选每 30 分钟，保存。之后改完飞书表格，最多 30 分钟网站自动更新。
+- **验证**：打开 `https://immortal-forest.netlify.app/`，看产品是否更新；或看 Netlify 的部署记录是否成功、构建日志里是否有 `OK: wrote N products`。
 
 ---
 
 ## 六、回滚 / 应急
 
-- 如果飞书表格填错了导致网站异常：直接去 GitHub 仓库编辑 `products.json`（或还原历史版本），Netlify 会重新部署。
+- 如果飞书表格填错导致网站异常：直接去 GitHub 仓库编辑 `products.json`（或还原历史版本），Netlify 会重新部署。
 - 原来的 `/admin/` 后台已不再使用，可忽略；不要两边同时改，以飞书表格为准。
+- 若 Netlify 构建日志出现 `WARN: Feishu fetch failed`：通常是飞书密钥填错或表格没共享给应用，按第二、三步复查即可，网站会用旧数据照常运行，不会崩。
 
 ---
 
 ## 七、常见问题
 
-**Q：定时同步要花钱吗？**
-A：GitHub Actions 对个人/公开仓库免费额度充足（30 分钟一次远在额度内），飞书自建应用也免费。
+**Q：同步要花钱吗？**
+A：Netlify 部署和飞书自建应用都免费；cron-job.org 基础版也免费。零成本。
 
 **Q：只想自己改，不想让应用有我的文档权限？**
 A：应用仅被授权读那一个共享出去的表格，看不到你其他文档，安全可控。
