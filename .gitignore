@@ -1,2 +1,4 @@
 .workbuddy/
 .codebuddy/
+__pycache__/
+*.pyc

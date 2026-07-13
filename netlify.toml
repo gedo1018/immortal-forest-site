@@ -1,9 +1,0 @@
-[build]
-  publish = "."
-  command = ""
-
-# Pure static site. No build step required.
-# After connecting this repo to Netlify:
-#   1. Site settings -> Identity -> Enable (this powers the /admin login)
-#   2. Identity -> Services -> Git Gateway -> Enable
-#   3. Visit /admin/ and log in with an invited Identity user.
