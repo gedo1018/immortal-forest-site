@@ -1,14 +1,9 @@
+# NOTE: This site has migrated to Cloudflare Pages.
+# Cloudflare ignores this file. It is kept only so the legacy
+# Netlify deployment (if ever reactivated) still builds as a
+# plain static site. The Feishu sync now runs via Cloudflare
+# Functions (functions/products.js) at request time — no build
+# command, no per-deploy quota cost.
+
 [build]
   publish = "."
-  command = "python3 scripts/sync_feishu.py"
-
-# Every deploy runs the build command first: it fetches the latest product
-# catalog from the Feishu sheet (credentials live in
-# Site settings -> Environment variables) and regenerates products.json
-# BEFORE the site is published. If Feishu is unreachable or returns no
-# data, the script keeps the existing products.json and the deploy still succeeds.
-#
-# How to sync after editing the Feishu sheet:
-#   - Manual : open the Deploy Hook URL
-#              (Site settings -> Build & deploy -> Build hooks -> create one)
-#   - Auto   : point a free cron (e.g. cron-job.org) at that hook, every 30 min
