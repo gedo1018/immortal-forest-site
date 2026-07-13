@@ -6,6 +6,25 @@
   <meta name="robots" content="noindex" />
   <title>仙人森林 · 内容管理</title>
   <link rel="stylesheet" href="https://unpkg.com/decap-cms@^3.0.0/dist/main.css" />
+
+  <!-- Normalize Netlify Identity invite/confirmation tokens.
+       Some email links arrive as #/invite_token=... (a leading slash after the #),
+       which the identity widget cannot parse, so it just shows the login screen.
+       Strip the slash so it becomes #invite_token=... before Decap loads. -->
+  <script>
+    (function () {
+      var h = window.location.hash || "";
+      var m = h.match(/^#\/(.*)$/);
+      if (m) {
+        var clean = "#" + m[1];
+        if (history.replaceState) {
+          history.replaceState(null, "", window.location.pathname + window.location.search + clean);
+        } else {
+          window.location.hash = clean;
+        }
+      }
+    })();
+  </script>
 </head>
 <body>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
