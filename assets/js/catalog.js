@@ -60,8 +60,14 @@
     return p.cat;
   }
   function thumb(p) {
-    if (p.img) return '<img src="' + esc(p.img) + '" alt="' + esc((p[lang] || p.zh).name) + '" loading="lazy" />';
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[p.cat] || ICONS.stationery) + "</svg>";
+    // Always render the branded placeholder layer underneath.
+    // The real image (if any) sits on top; on load failure we hide it and the
+    // placeholder shows through — so a broken/external URL never shows a broken icon.
+    const ph = '<span class="thumb-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[p.cat] || ICONS.stationery) + "</svg></span>";
+    if (p.img) {
+      return ph + '<img class="thumb-img" src="' + esc(p.img) + '" alt="' + esc((p[lang] || p.zh).name) + '" loading="lazy" decoding="async">';
+    }
+    return ph;
   }
   function specLine(p) {
     const s = p.spec || {};
@@ -85,6 +91,15 @@
 
   grid.innerHTML = data.map(cardHTML).join("");
   const cards = Array.prototype.slice.call(grid.querySelectorAll(".prod"));
+
+  // Image error fallback: if an (external/R2) image fails to load, hide it so the
+  // branded placeholder layer behind it shows through instead of a broken-image icon.
+  grid.querySelectorAll(".thumb-img").forEach(img => {
+    img.addEventListener("error", () => {
+      const t = img.closest(".thumb");
+      if (t) t.classList.add("img-fail");
+    });
+  });
 
   // ---- scroll reveal ----
   if (reduce || !("IntersectionObserver" in window)) {
