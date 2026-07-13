@@ -1,8 +1,8 @@
 /* =========================================================
    仙人森林 · IMMORTAL FOREST — product catalog renderer
    Data-driven. Loads /products.json (the source of truth,
-   edited via Decap CMS at /admin/). Falls back to
-   window.PRODUCTS (assets/js/products-data.js) when offline.
+   generated from the Feishu sheet by .github/workflows/sync-feishu.yml).
+   Falls back to window.PRODUCTS (assets/js/products-data.js) when offline.
    Language is derived from <html lang>.
    ========================================================= */
 (async function () {
