@@ -8,12 +8,19 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>仙人森林 · 内容管理</title>
-  <link rel="stylesheet" href="https://unpkg.com/decap-cms@^3.0.0/dist/main.css" />
 
-  <!-- Normalize Netlify Identity invite/confirmation tokens.
-       Some email links arrive as #/invite_token=... (a leading slash after the #),
-       which the identity widget cannot parse, so it just shows the login screen.
-       Strip the slash so it becomes #invite_token=... before Decap loads. -->
+  <!--
+    CRITICAL FIX FOR INVITE TOKEN FLOW:
+    Netlify Identity invite links arrive with hash tokens like:
+      #invite_token=XXX   or   #/invite_token=XXX   or   #confirmation_token=XXX
+
+    Decap CMS v3.x's bundled identity widget has known issues handling the
+    invite-to-password-setup transition for git-gateway backends.
+    Fix: Load the OFFICIAL netlify-identity-widget FIRST so it owns token handling,
+    then let Decap CMS initialize on top of the already-ready widget instance.
+  -->
+
+  <!-- Step 1: Normalize hash (strip leading slash after #) -->
   <script>
     (function () {
       var h = window.location.hash || "";
@@ -28,8 +35,53 @@
       }
     })();
   </script>
+
+  <!-- Step 2: Load OFFICIAL Netlify Identity Widget BEFORE Decap -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+  <link rel="stylesheet" href="https://unpkg.com/decap-cms@^3.0.0/dist/main.css" />
 </head>
 <body>
+  <!--
+    Step 3: Initialize Identity widget explicitly before Decap loads.
+    This ensures invite tokens are handled by the official widget,
+    which properly shows the "Set Password" screen.
+  -->
+  <script>
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.init();
+    }
+
+    // Fallback diagnostic: if hash has a token but we're still seeing login
+    // after 5 seconds, show a helpful message with direct action link
+    (function () {
+      var h = window.location.hash || "";
+      if (/invite_token|confirmation_token|recovery_token/.test(h)) {
+        setTimeout(function () {
+          var el = document.querySelector('.nc-app-header, .nc-root, body');
+          if (el && el.innerHTML && (
+            el.innerHTML.indexOf('login') > -1 ||
+            el.innerHTML.indexOf('Login') > -1 ||
+            el.innerHTML.indexOf('Sign in') > -1 ||
+            document.querySelector('input[type="email"], input[type="password"]')
+          )) {
+            var banner = document.createElement('div');
+            banner.style.cssText =
+              'position:fixed;top:0;left:0;right:0;z-index:99999;background:#d97706;color:#fff;' +
+              'padding:12px 20px;font-family:system-ui,sans-serif;font-size:14px;text-align:center;';
+            banner.innerHTML =
+              '<b>Token detected but stuck on login.</b> ' +
+              'Try this: open DevTools Console (F12) and paste: <code style="background:rgba(255,255,255,0.2);padding:2px 6px;border-radius:4px;">netlifyIdentity.accept(\'' +
+              h.replace('#', '') + '\', {name:\'Admin\'})</code>' +
+              '&nbsp; <a href="#" onclick="this.parentNode.remove()" style="color:#fff;text-decoration:underline;margin-left:10px">Dismiss</a>';
+            document.body.insertBefore(banner, document.body.firstChild);
+          }
+        }, 5000);
+      }
+    })();
+  </script>
+
+  <!-- Step 4: Decap CMS loads last, reuses the initialized Identity widget -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>
