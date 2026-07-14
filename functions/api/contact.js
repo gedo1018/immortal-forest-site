@@ -23,6 +23,8 @@
 //  browser Network tab or by opening /api/contact in a browser.
 // =========================================================
 
+import { getNextSeq, bjParts } from "./_feishu.js";
+
 const API_BASE = "https://open.feishu.cn";
 
 let _tokenCache = { token: null, exp: 0 };
@@ -111,8 +113,9 @@ function mask(s) {
 //  Feishu SHEET archive (auto-creates the "询盘" tab)
 // =========================================================
 
-// Column layout of the 询盘 sheet. Keep ORDER in sync with buildRow().
-const INQUIRY_HEADERS = ["提交时间", "姓名", "公司/国家", "邮箱", "咨询类型", "留言", "来源IP", "状态"];
+// Column layout of the 询盘 sheet. Order: 序号 | 提交时间 | 姓名 | 公司/国家 |
+// 邮箱 | 咨询类型 | 留言 | 来源IP | 状态 | 跟进时间 | 跟进结果
+const INQUIRY_HEADERS = ["序号", "提交时间", "姓名", "公司/国家", "邮箱", "咨询类型", "留言", "来源IP", "状态", "跟进时间", "跟进结果"];
 const INQUIRY_COLS = INQUIRY_HEADERS.length;
 
 function colLetter(n) {
@@ -196,15 +199,16 @@ async function ensureInquirySheet(env) {
       "/values/" + encodeURIComponent(sheetId + "!A1"), { headers: { Authorization: "Bearer " + token } });
     const rj = await r.json();
     const firstRow = (rj.data && rj.data.valueRange && rj.data.valueRange.values && rj.data.valueRange.values[0]) || [];
-    if (!firstRow.length || !String(firstRow[0]).trim()) {
+    if (!firstRow.length || String(firstRow[0]).trim() !== "序号") {
       await writeValues(token, spreadsheetToken, headerRange, [INQUIRY_HEADERS]);
     }
   } catch (e) { /* header best-effort; append still works without it */ }
   return { spreadsheetToken, sheetId, sheetName, created };
 }
 
-function buildInquiryRow(time, data, ip) {
+function buildInquiryRow(seq, time, data, ip) {
   return [
+    seq,
     time,
     data.name || "",
     data.company || data.country || "",
@@ -213,6 +217,8 @@ function buildInquiryRow(time, data, ip) {
     data.msg || "",
     ip,
     "新", // 状态：待跟进
+    "",    // 跟进时间
+    "",    // 跟进结果
   ];
 }
 
@@ -251,19 +257,23 @@ export async function onRequestPost(context) {
 
   const time = new Date().toISOString();
   const ip = context.request.headers.get("cf-connecting-ip") || "";
-  const row = buildInquiryRow(time, data, ip);
+  const seq = await getNextSeq(env);
+  const row = buildInquiryRow(seq, time, data, ip);
 
-  console.log("Contact submission:", JSON.stringify({ time, ...data, ip }));
+  console.log("Contact submission:", JSON.stringify({ seq, time, ...data, ip }));
 
-  const title = "新询盘 · IMMORTAL FOREST";
+  const submit = bjParts(new Date());
+  const deadline = bjParts(new Date(Date.now() + 60 * 60 * 1000));
+  const title = "【询盘 #" + seq + "】新询盘 · IMMORTAL FOREST";
   const plain = [
     "姓名: " + (data.name || "-"),
     "公司/国家: " + (data.company || data.country || "-"),
     "邮箱: " + (data.email || "-"),
     "类型: " + (data.type || "-"),
     "留言: " + (data.msg || "-"),
-    "IP: " + ip,
-    "时间: " + time,
+    "提交: " + submit.dt,
+    "⏰ 请于 " + deadline.time + " 前跟进（1 小时）",
+    "—— 处理后回复：@机器人 #" + seq + " 状态 备注(可选)",
   ].join("\n");
 
   const results = {};
@@ -323,7 +333,7 @@ export async function onRequestGet(context) {
     if (env.FEISHU_GROUP_WEBHOOK) results.feishuGroup = await pushFeishuGroup(env.FEISHU_GROUP_WEBHOOK, title + "\n" + plain);
     // also write a clearly-marked test row so the whole path is verified
     try {
-      const testRow = buildInquiryRow(new Date().toISOString(),
+      const testRow = buildInquiryRow(await getNextSeq(env), new Date().toISOString(),
         { name: "【测试】", company: "测试公司", email: "test@example.com", type: "测试", msg: "【测试】这是一条测试询盘，可在飞书「询盘」表中删除" }, "127.0.0.1");
       results.feishuArchive = await archiveInquiry(env, testRow);
     } catch (e) {
