@@ -2,3 +2,8 @@
 .codebuddy/
 __pycache__/
 *.pyc
+
+# 飞书应用凭据(含 secret) — 绝不入库
+.env
+.env.*
+!.env.example
