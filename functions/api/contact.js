@@ -163,10 +163,13 @@ async function writeValues(token, spreadsheetToken, range, values) {
 }
 
 async function appendValues(token, spreadsheetToken, sheetId, values) {
-  const r = await fetch(API_BASE + "/open-apis/sheets/v2/spreadsheets/" + spreadsheetToken + "/values_append", {
+  // Feishu requires a RANGE (start:end), not a single cell, for append.
+  // insertDataOption=INSERT_ROWS guarantees a new row is inserted instead of
+  // overwriting existing data when trailing blank rows run out.
+  const r = await fetch(API_BASE + "/open-apis/sheets/v2/spreadsheets/" + spreadsheetToken + "/values_append?insertDataOption=INSERT_ROWS", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-    body: JSON.stringify({ valueRange: { range: sheetId + "!A1", values } }),
+    body: JSON.stringify({ valueRange: { range: sheetId + "!A1:Z1000", values } }),
   });
   const j = await r.json();
   if (j.code !== 0) throw new Error("append values: " + JSON.stringify(j));
