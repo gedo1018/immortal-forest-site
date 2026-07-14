@@ -70,7 +70,7 @@
       // origin, otherwise they break on sub-directory pages like /en/products.html
       // (where a relative path would resolve to /en/images/... and 404).
       if (src.indexOf("://") === -1 && src.startsWith("images/")) {
-        src = location.origin + "/" + src;
+        src = location.origin + "/" + encodeURI(src);
       }
       return ph + '<img class="thumb-img" src="' + esc(src) + '" alt="' + esc((p[lang] || p.zh).name) + '" loading="lazy" decoding="async">';
     }

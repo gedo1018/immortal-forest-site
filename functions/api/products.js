@@ -102,7 +102,7 @@ function buildProducts(values, siteUrl) {
       return norm(row[i]);
     };
     let img = get("img");
-    if (img && img.startsWith("images/") && siteUrl) img = siteUrl + "/" + img;
+    if (img && img.startsWith("images/") && siteUrl) img = siteUrl + "/" + encodeURI(img);
     // Category code: explicit 分类 column, else derive a stable slug from bilingual label
     let cat = get("cat");
     if (!cat) {
