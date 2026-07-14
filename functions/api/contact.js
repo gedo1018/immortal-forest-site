@@ -23,7 +23,7 @@
 //  browser Network tab or by opening /api/contact in a browser.
 // =========================================================
 
-import { getNextSeq, bjParts } from "./_feishu.js";
+import { getNextSeq, bjParts, STATUS_KEYWORDS } from "./_feishu.js";
 
 const API_BASE = "https://open.feishu.cn";
 
@@ -274,6 +274,7 @@ export async function onRequestPost(context) {
     "提交: " + submit.dt,
     "⏰ 请于 " + deadline.time + " 前跟进（1 小时）",
     "—— 处理后回复：@机器人 #" + seq + " 状态 备注(可选)",
+    "状态可选：" + STATUS_KEYWORDS.join(" / "),
   ].join("\n");
 
   const results = {};

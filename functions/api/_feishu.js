@@ -82,22 +82,17 @@ export async function getNextSeq(env) {
   return max + 1;
 }
 
-// Canonical follow-up statuses (Chinese keys; English aliases below).
-export const STATUS_MAP = {
-  "新": "新", "待跟进": "待跟进",
-  "已对接": "已对接", "对接": "已对接", "联系中": "已对接",
-  "跟进中": "跟进中", "处理中": "跟进中",
-  "已报价": "已报价", "报价": "已报价",
-  "完成": "完成", "搞定": "完成", "已完": "完成", "done": "完成",
-  "成交": "成交", "成单": "成交", "下单": "成交",
-  "流失": "流失", "放弃": "流失", "没戏": "流失", "不成": "流失",
-  "忽略": "忽略", "暂不": "忽略", "搁置": "忽略",
-};
+// Fixed, CLOSED set of follow-up statuses the sender MUST pick from.
+// (新 is auto-written when a row is created and is NOT commandable.)
+// No aliases on purpose: the sender chooses one of these exact words,
+// so there is never any ambiguity about which status was meant.
+export const STATUS_KEYWORDS = ["已对接", "跟进中", "已报价", "成交", "流失"];
 
 export function normalizeStatus(word) {
   if (!word) return null;
-  const w = word.trim();
-  return STATUS_MAP[w.toLowerCase()] || STATUS_MAP[w] || null;
+  // strip a trailing delimiter someone may have typed (，。, etc.)
+  const w = word.trim().replace(/[，,。.、；;:：!！?？]+$/g, "");
+  return STATUS_KEYWORDS.includes(w) ? w : null;
 }
 
 // Format a Date in Asia/Shanghai (UTC+8) deterministically.

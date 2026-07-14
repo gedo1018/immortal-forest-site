@@ -16,7 +16,7 @@
 // =========================================================
 
 import {
-  getToken, resolveInquirySheet, readValues, writeValues, normalizeStatus, bjParts,
+  getToken, resolveInquirySheet, readValues, writeValues, normalizeStatus, bjParts, STATUS_KEYWORDS,
 } from "./_feishu.js";
 
 const API_BASE = "https://open.feishu.cn";
@@ -96,7 +96,7 @@ async function processCommand(env, message) {
     const m = text.match(/#\s*(\d+)\s+(\S+)(?:\s+([\s\S]*))?/);
     if (!m) {
       await reply(env, message,
-        "❓ 指令格式：@机器人 #序号 状态 备注(可选)\n例如：@机器人 #12 已对接 已发报价");
+        "❓ 指令格式：@机器人 #序号 状态 备注(可选)\n状态可选：" + STATUS_KEYWORDS.join(" / ") + "\n例如：@机器人 #12 已对接 已发报价和目录");
       return;
     }
     const seq = parseInt(m[1], 10);
@@ -105,7 +105,7 @@ async function processCommand(env, message) {
     const canonical = normalizeStatus(statusWord);
     if (!canonical) {
       await reply(env, message,
-        "❓ 不认识的状态「" + statusWord + "」\n可用：已对接 / 已报价 / 跟进中 / 完成 / 成交 / 流失 / 忽略");
+        "❓ 状态只能是固定词：「" + statusWord + "」无效\n可用：" + STATUS_KEYWORDS.join(" / "));
       return;
     }
 
