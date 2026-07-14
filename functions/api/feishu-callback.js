@@ -164,10 +164,22 @@ export async function onRequestPost(context) {
 
   const appId = env.FEISHU_APP_ID;
   const mentions = message.mentions || [];
-  const botMentioned = mentions.some(
-    (mt) => mt.type === "bot" || (mt.id && mt.id.app_id === appId)
-  );
-  if (!botMentioned) return jsonOk();
+  const botMentioned = mentions.some((mt) => {
+    if (!mt) return false;
+    const id = mt.id;
+    if (id === appId) return true;                                  // id 为字符串(直接是 app_id)
+    if (id && typeof id === "object" && id.app_id === appId) return true; // id 为对象含 app_id
+    if (mt.id_type === "app_id") return true;                       // 按 id_type 判断
+    return false;
+  });
+  // Fallback: even if the @mention isn't detected (Feishu format drift),
+  // still act when the text clearly matches the command pattern. This is a
+  // private dedicated group bot, so false-positive risk is negligible.
+  const contentText = (() => {
+    try { return JSON.parse(message.content || "{}").text || ""; } catch { return ""; }
+  })();
+  const looksLikeCommand = /#\s*\d+\s+\S+/.test(contentText.replace(/@_user_\w+/g, ""));
+  if (!botMentioned && !looksLikeCommand) return jsonOk();
 
   // respond 200 immediately; process asynchronously so Feishu doesn't retry
   const task = processCommand(env, message);
