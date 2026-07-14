@@ -11,6 +11,8 @@
 用法:
   python feishu_sheet.py read
   python feishu_sheet.py plan plan.json
+  python feishu_sheet.py testrow        # 在下一个空行写入测试标记行(验证写链路用)
+  python feishu_sheet.py clearrow <行号> # 清空指定行(清理测试行用)
 
 plan.json 格式 (row/col 均为 1 起始, 含表头; row=1 是表头行):
   {
@@ -201,14 +203,75 @@ def cmd_plan(plan_path):
     print("\n完成: 成功 %d / 共 %d" % (ok_count, len(updates)))
 
 
+# ---------- 命令: testrow (写入链路测试, 非交互) ----------
+TEST_MARKER = "__写入测试__"
+
+def find_next_empty_row(values):
+    """从数据区(第2行起)向下找第一处 中文名(列5) 为空的行号(1-based)。"""
+    for i in range(1, len(values)):
+        row = values[i]
+        name = row[4] if len(row) > 4 else None
+        if not (name and str(name).strip()):
+            return i + 1  # 1-based
+    return len(values) + 1
+
+def cmd_testrow():
+    token = get_token()
+    sheet_id = get_sheet_id(token)
+    values = read_full(token, sheet_id)
+    row = find_next_empty_row(values)
+    print("下一个空行 = ROW %d (将写入测试标记行)" % row)
+    marker = [
+        "test", "测试", "Test", "images/products/p10.svg",
+        TEST_MARKER, "写表链路测试行,验证后会自动清理", "¥ 0.01 / 测试",
+        "Write Test", "Write-path test row, will be cleared.", "$0.01 / test",
+        "1", "1天", "EXW",
+    ]
+    print("即将写入:")
+    for i, v in enumerate(marker, start=1):
+        print("  %s%d = %r" % (col_letter(i), row, v))
+    ok = 0
+    for ci, v in enumerate(marker, start=1):
+        j = write_cell(token, sheet_id, row, ci, v)
+        if j.get("code") == 0:
+            ok += 1
+        else:
+            print("  ✗ %s%d 失败: %s" % (col_letter(ci), row, json.dumps(j, ensure_ascii=False)))
+    print("\n写入完成: 成功 %d / 共 %d。测试行位于 ROW %d" % (ok, len(marker), row))
+    if ok == len(marker):
+        print("→ 用 `python feishu_sheet.py clearrow %d` 清理此测试行。" % row)
+
+# ---------- 命令: clearrow (清空指定行) ----------
+def cmd_clearrow(row):
+    try:
+        row = int(row)
+    except ValueError:
+        sys.exit("✗ 行号必须是数字")
+    if row < 2:
+        sys.exit("✗ 不允许清空表头或非法行")
+    token = get_token()
+    sheet_id = get_sheet_id(token)
+    values = read_full(token, sheet_id)
+    cols = len(values[0]) if values else 13
+    ok = 0
+    for ci in range(1, cols + 1):
+        j = write_cell(token, sheet_id, row, ci, "")
+        if j.get("code") == 0:
+            ok += 1
+    print("已清空 ROW %d: 成功 %d / 共 %d" % (row, ok, cols))
+
 # ---------- 入口 ----------
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        sys.exit("用法:\n  python feishu_sheet.py read\n  python feishu_sheet.py plan plan.json")
+        sys.exit("用法:\n  python feishu_sheet.py read\n  python feishu_sheet.py plan plan.json\n  python feishu_sheet.py testrow\n  python feishu_sheet.py clearrow <行号>")
     cmd = sys.argv[1]
     if cmd == "read":
         cmd_read()
     elif cmd == "plan":
         cmd_plan(sys.argv[2] if len(sys.argv) > 2 else "plan.json")
+    elif cmd == "testrow":
+        cmd_testrow()
+    elif cmd == "clearrow":
+        cmd_clearrow(sys.argv[2] if len(sys.argv) > 2 else "")
     else:
         sys.exit("未知命令: " + cmd)
