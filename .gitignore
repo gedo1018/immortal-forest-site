@@ -7,3 +7,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# 本地读表缓存(脚本生成)
+.cache/
