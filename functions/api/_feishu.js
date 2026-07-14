@@ -33,7 +33,8 @@ async function feishuSheetsQuery(token, spreadsheetToken) {
 
 export async function getSheetIdByName(token, spreadsheetToken, name) {
   const sheets = await feishuSheetsQuery(token, spreadsheetToken);
-  for (const s of sheets) if (s.title === name) return s.sheetId;
+  // Feishu sheets/query returns snake_case fields: sheet_id + title.
+  for (const s of sheets) if (s.title === name) return s.sheet_id;
   return null;
 }
 
