@@ -49,9 +49,12 @@ async function getToken(appId, appSecret) {
   return j.tenant_access_token;
 }
 
-// Discover the first sheet's id so we don't require the user to paste a
-// brittle "sheetId!A1:Z1000" range by hand.
-async function getFirstSheetId(token, spreadsheetToken) {
+// Resolve the product sheet id. Prefers the sheet whose title matches the
+// product list name (env FEISHU_PRODUCT_SHEET_NAME, default "产品列表"); falls
+// back to the first sheet so old setups keep working. We match by NAME, not
+// by array order, because Feishu's sheets/query order is NOT the tab order
+// (e.g. an API-created "询盘" sheet can sort ahead of a renamed "产品列表").
+async function getFirstSheetId(token, spreadsheetToken, preferredName) {
   const url = API_BASE + "/open-apis/sheets/v3/spreadsheets/" +
               spreadsheetToken + "/sheets/query";
   const r = await fetch(url, { headers: { Authorization: "Bearer " + token } });
@@ -59,6 +62,10 @@ async function getFirstSheetId(token, spreadsheetToken) {
   if (j.code !== 0) throw new Error("Feishu sheets query error: " + JSON.stringify(j));
   const sheets = (j.data && j.data.sheets) || [];
   if (!sheets.length) throw new Error("No sheets found in spreadsheet");
+  if (preferredName) {
+    const matched = sheets.find((s) => s.title === preferredName);
+    if (matched) return matched.sheet_id;
+  }
   return sheets[0].sheet_id;
 }
 
@@ -141,7 +148,8 @@ async function fallback(context, debug) {
 
 export async function onRequestGet(context) {
   const { FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_SPREADSHEET_TOKEN,
-          FEISHU_SHEET_TOKEN, FEISHU_SHEET_RANGE, SITE_URL } = context.env;
+          FEISHU_SHEET_TOKEN, FEISHU_SHEET_RANGE, FEISHU_PRODUCT_SHEET_NAME,
+          SITE_URL } = context.env;
 
   // Accept either spelling the user may have used.
   const sheetToken = FEISHU_SPREADSHEET_TOKEN || FEISHU_SHEET_TOKEN;
@@ -156,7 +164,7 @@ export async function onRequestGet(context) {
     const token = await getToken(FEISHU_APP_ID, FEISHU_APP_SECRET);
     let range = FEISHU_SHEET_RANGE;
     if (!range) {
-      const sheetId = await getFirstSheetId(token, sheetToken);
+      const sheetId = await getFirstSheetId(token, sheetToken, FEISHU_PRODUCT_SHEET_NAME || "产品列表");
       range = sheetId + "!A1:Z1000";
     }
     const values = await readRange(token, sheetToken, range);
